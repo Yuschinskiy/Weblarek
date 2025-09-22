@@ -1,8 +1,6 @@
 //src/copmonents/base/Component.ts
 /**
- * Базовый компонент
- */
-// src/components/base/Component.ts
+ * Базовый компонент */
 export abstract class Component<T> {
   protected element: HTMLElement;
 

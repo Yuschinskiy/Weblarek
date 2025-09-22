@@ -35,3 +35,7 @@ export interface IProductData {
   getProductById(id: string): IProduct;
 }
 
+export interface IApiListResponse<T> {
+  total: number;
+  items: T[];
+}

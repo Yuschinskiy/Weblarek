@@ -1,32 +1,59 @@
-// src/main.ts
+//src/main.ts
 import './scss/styles.scss';
 import { EventEmitter } from './components/base/Events';
 import { ProductPresenter } from './presenters/ProductPresenter';
 import { BasketPresenter } from './presenters/BasketPresenter';
-import { ProductApi } from './api/ProductApi';
 import { OrderFormPresenter } from './presenters/OrderFormPresenter';
 
-const API_URL = 'https://your-api.example.com'; // Заменить на реальный URL API
+import { ProductApi } from './api/ProductApi';
+import { FetchApi } from './api/FetchApi';
+
+// Получаем базовый URL API из переменной окружения VITE_API_ORIGIN
+// Если переменная не задана, используем дефолтный адрес
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'https://larek-api.nomoreparties.co';
+const API_URL = `${API_ORIGIN}/api/weblarek`;
 
 document.addEventListener('DOMContentLoaded', () => {
   const events = new EventEmitter();
 
-  const productContainer = document.getElementById('product-list');
-  const basketContainer = document.getElementById('basket');
-  const modalContainer = document.body; // Можно создать отдельный div для модалки
-
-  if (!productContainer || !basketContainer) {
-    console.error('Не найдены контейнеры в DOM: product-list или basket');
+  const productContainer = document.querySelector('.gallery');
+  if (!productContainer) {
+    console.error('Не найден контейнер для списка продуктов (.gallery)');
     return;
   }
 
-  const productApi = new ProductApi(API_URL);
+  const modalContent = document.querySelector('#modal-container .modal__content');
+  if (!modalContent) {
+    console.error('Контейнер модального окна не найден');
+    return;
+  }
 
-  const productPresenter = new ProductPresenter(events, productContainer, modalContainer);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const basketTemplate = document.getElementById('basket') as HTMLTemplateElement | null;
+  if (!basketTemplate) {
+    console.error('Шаблон корзины не найден');
+    return;
+  }
+  const basketContainer = basketTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
+  modalContent.appendChild(basketContainer);
+
+  const orderTemplate = document.getElementById('order') as HTMLTemplateElement | null;
+  if (!orderTemplate) {
+    console.error('Шаблон формы заказа не найден');
+    return;
+  }
+  const orderFormContainer = orderTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
+  modalContent.appendChild(orderFormContainer);
+
+  // Создаем экземпляр FetchApi с базовым URL из переменной окружения
+  const fetchApi = new FetchApi(API_URL);
+
+  // Передаем объект fetchApi в ProductApi
+  const productApi = new ProductApi(fetchApi);
+
+  const productPresenter = new ProductPresenter(events, productContainer, modalContent);
   const basketPresenter = new BasketPresenter(events, basketContainer);
+  const orderFormPresenter = new OrderFormPresenter(events, orderFormContainer);
 
-  // Асинхронная функция для загрузки товаров и их отображения
   async function loadProducts() {
     try {
       const products = await productApi.fetchProducts();
@@ -36,21 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // Можно добавить UI-уведомление об ошибке
     }
   }
-const orderFormContainer = document.getElementById('order-form');
-if (!orderFormContainer) {
-  console.error('Контейнер для формы заказа не найден');
-  return;
-}
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const orderFormPresenter = new OrderFormPresenter(events, orderFormContainer);
-basketPresenter; 
-orderFormPresenter;
-
-events.on('orderSubmitted', (data) => {
-  console.log('Заказ отправлен:', data);
-  // Можно показать уведомление, очистить корзину и т.п.
-});
+  events.on('orderSubmitted', (data) => {
+    console.log('Заказ отправлен:', data);
+    // Можно показать уведомление, очистить корзину и т.п.
+  });
 
   loadProducts();
 });

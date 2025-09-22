@@ -3,30 +3,29 @@ import { Component } from './Component';
 import { IOrderFormData } from '../../types/types';
 
 export class OrderForm extends Component<null> {
-  constructor() {
-    super('form', 'order-form');
-    this.element.innerHTML = `
-      <label>
-        Имя:<br/>
-        <input type="text" name="name" required />
-      </label><br/>
-      <label>
-        Email:<br/>
-        <input type="email" name="email" required />
-      </label><br/>
-      <label>
-        Адрес:<br/>
-        <textarea name="address" required></textarea>
-      </label><br/>
-      <button type="submit">Оформить заказ</button>
-      <div class="order-form__error" style="color:red; margin-top: 10px;"></div>
-      <div class="order-form__success" style="color:green; margin-top: 10px;"></div>
-    `;
-  }
+  private formElement: HTMLFormElement;
 
-  // Добавляем публичный геттер для доступа к элементу
-  public getElement(): HTMLElement {
-    return this.element;
+  constructor() {
+    super('div', 'order-form'); // контейнер для формы
+
+    // Находим шаблон
+    const template = document.getElementById('order') as HTMLTemplateElement;
+    if (!template) {
+      throw new Error('Template with id="order" not found');
+    }
+
+    // Клонируем содержимое шаблона
+    const content = template.content.cloneNode(true) as DocumentFragment;
+
+    // Вставляем в контейнер
+    this.element.appendChild(content);
+
+    // Сохраняем ссылку на саму форму внутри контейнера
+    this.formElement = this.element.querySelector('form[name="order"]') as HTMLFormElement;
+
+    if (!this.formElement) {
+      throw new Error('Form with name="order" not found in template');
+    }
   }
 
   render(): HTMLElement {
@@ -34,28 +33,38 @@ export class OrderForm extends Component<null> {
   }
 
   update(): void {
-    (this.element.querySelector('input[name="name"]') as HTMLInputElement).value = '';
-    (this.element.querySelector('input[name="email"]') as HTMLInputElement).value = '';
-    (this.element.querySelector('textarea[name="address"]') as HTMLTextAreaElement).value = '';
+    // Очищаем поля формы
+    const inputs = this.formElement.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+      (input as HTMLInputElement | HTMLTextAreaElement).value = '';
+    });
+
     this.setError('');
-    this.setSuccess('');
   }
 
   getFormData(): IOrderFormData {
     return {
-      name: (this.element.querySelector('input[name="name"]') as HTMLInputElement).value,
-      email: (this.element.querySelector('input[name="email"]') as HTMLInputElement).value,
-      address: (this.element.querySelector('textarea[name="address"]') as HTMLTextAreaElement).value,
+      name: (this.formElement.querySelector('input[name="name"]') as HTMLInputElement)?.value || '',
+      email: (this.formElement.querySelector('input[name="email"]') as HTMLInputElement)?.value || '',
+      address: (this.formElement.querySelector('input[name="address"]') as HTMLInputElement)?.value || '',
     };
   }
 
   setError(message: string) {
-    const errorDiv = this.element.querySelector('.order-form__error') as HTMLElement;
-    errorDiv.textContent = message;
+    const errorSpan = this.formElement.querySelector('.form__errors') as HTMLElement;
+    if (errorSpan) {
+      errorSpan.textContent = message;
+      errorSpan.style.color = 'red';
+      errorSpan.style.marginTop = '10px';
+    }
   }
 
   setSuccess(message: string) {
-    const successDiv = this.element.querySelector('.order-form__success') as HTMLElement;
-    successDiv.textContent = message;
+    // В вашем шаблоне нет отдельного блока для успеха — можно добавить или использовать alert
+    alert(message);
+  }
+
+  getElement(): HTMLElement {
+    return this.element;
   }
 }

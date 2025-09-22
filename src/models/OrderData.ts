@@ -1,5 +1,5 @@
 // src/models/OrderData.ts
-import { IOrderData, IProduct, IOrder } from '../types/types';
+import { IOrder, IOrderData, IProduct } from '../types/types';
 
 export class OrderData implements IOrderData {
   productList: IProduct[] = [];
@@ -14,10 +14,22 @@ export class OrderData implements IOrderData {
   }
 
   deleteProduct(idProduct: string): void {
-    this.productList = this.productList.filter(p => p.id !== idProduct);
+    this.productList = this.productList.filter((p) => p.id !== idProduct);
+  }
+
+  clear(): void {
+    this.productList = [];
   }
 
   getTotal(): number {
     return this.productList.reduce((sum, p) => sum + (p.price ?? 0), 0);
+  }
+
+  getCount(): number {
+    return this.productList.length;
+  }
+
+  hasProduct(id: string): boolean {
+    return this.productList.some((p) => p.id === id);
   }
 }

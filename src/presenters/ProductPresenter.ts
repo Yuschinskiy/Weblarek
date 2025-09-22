@@ -13,7 +13,7 @@ export class ProductPresenter {
 
   constructor(events: IEvents, container: HTMLElement, modalContainer: HTMLElement) {
     this.events = events;
-    this.productData = new ProductData(events);
+    this.productData = new ProductData();
     this.container = container;
     this.modalPresenter = new ModalPresenter(modalContainer);
 
