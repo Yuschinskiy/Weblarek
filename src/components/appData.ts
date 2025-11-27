@@ -1,0 +1,148 @@
+// src/components/appData.ts
+import { Model } from './base/BaseModel';
+import {
+    IApiStatus,
+    IProduct,
+    ErrorForm,
+    IOrder,
+    IContact,
+    IDelivery,
+} from '../types/index';
+
+export interface CatalogChangeEvent {
+    products: IProduct[];
+}
+
+export class AppState extends Model<IApiStatus> {
+    catalog: IProduct[] = [];
+    basket: IProduct[] = [];
+    order: Partial<IOrder> = {
+        email: '',
+        phone: '',
+        address: '',
+        payment: ''
+    };
+
+    preview: string | null;
+    formErrors: ErrorForm = {};
+
+    addToBasket(product: IProduct) {
+        if (!this.basket.find((p) => p.id === product.id)) {
+            this.basket.push(product);
+            
+            if (!this.order.items) {
+                this.order.items = [];
+            }    
+            this.order.items.push(product.id);
+            this.updateBasket();
+        }
+    }
+
+    removeFromBasket(product: IProduct) {
+        this.basket = this.basket.filter((p) => p.id !== product.id);
+        this.order.items = this.order.items.filter((id) => id !== product.id);
+        this.updateBasket();
+    }
+
+    clearBasket() {
+        this.basket = [];
+        this.order.items = [];
+        this.updateBasket();
+    }
+
+    updateBasket() {
+        this.order.total = this.getTotal();
+        this.emitChanges('basket:change', this.basket);
+        this.events.emit('basket:update');
+    }
+
+    getTotal() {
+        return this.basket.reduce((sum, item) => sum + item.price, 0);
+    }
+
+    setCatalog(items: IProduct[]) {
+        this.catalog = items;
+        this.emitChanges('catalog:change', { products: this.catalog });
+    }
+
+    setPreview(product: IProduct) {
+        this.preview = product.id;
+        this.emitChanges('preview:changed', product);
+    }
+
+    getOrderToPost(): IOrder {
+        return {
+            ...this.order as IOrder,
+            items: this.basket.map((item) => item.id),
+            total: this.getTotal()
+        };
+    }
+
+    setPayment(value:string) {
+        this.order.payment = value;
+        this.emitChanges("order:change", this.order);
+    }
+
+    setOrderField<Field extends keyof IOrder>(field: Field, value: IOrder[Field]) {
+        this.order[field] = value;
+
+        if (this.validOrder()) {
+            this.events.emit('order:valid');
+        }
+    }
+
+    setContactField<Field extends keyof IContact>(field: Field, value: IContact[Field]) {
+        this.order[field] = value;
+
+        if (this.validContact()) {
+            this.events.emit('contacts:valid');
+        }
+    }
+
+    validContact() {
+        const errors: typeof this.formErrors = {};
+
+        if (
+            !this.order.email ||
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.order.email)
+        ) {
+            errors.email = 'Введите корректный email';
+        }
+
+        if (!this.order.phone || !/^\+?\d{10,15}$/.test(this.order.phone)) {
+            errors.phone = 'Введите корректный номер телефона';
+        }
+
+        this.formErrors = errors;
+        this.emitChanges('formErrors:change', this.formErrors);
+
+        return Object.keys(errors).length === 0;
+    }
+
+    validOrder() {
+        const errors: typeof this.formErrors = {};
+
+        if (!this.order.address) {
+            errors.address = 'Введите адрес';
+        }
+
+        if (!this.order.payment) {
+            errors.payment = 'Выберите способ оплаты';
+        }
+
+        this.formErrors = errors;
+        this.emitChanges('formErrors:change', this.formErrors);
+
+        return Object.keys(errors).length === 0;
+    }
+
+    resetOrder() {
+        this.order.address = '';
+        this.order.payment = '';
+    }
+    
+    resetContact() {
+        this.order.email = '';
+        this.order.phone = '';
+    }
+}
