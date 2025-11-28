@@ -35,12 +35,12 @@ export class Basket extends Component<IBasket> {
 				})
 			);
 		}
-		this._button.disabled = items.length ? false : true;
+		this.setDisabled(this._button, !items.length);
 	}
 
 	set selected(value: boolean) {
-    this.setDisabled(this._button, !value);
-}
+		this.setDisabled(this._button, !value);
+	}
 
 	set priceTotal(price: number) {
 		this.setText(this._price, `${price.toString()} синапсов`);

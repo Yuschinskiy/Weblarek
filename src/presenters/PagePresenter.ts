@@ -21,7 +21,7 @@ export class PagePresenter {
             this.page.counter = this.appData.basket.length;
         });
 
-        // Блокировка страницы при модале
+        // Блокировка страницы при модале - УЖЕ ЕСТЬ!
         this.events.on('modal:open', () => {
             this.page.locked = true;
         });
