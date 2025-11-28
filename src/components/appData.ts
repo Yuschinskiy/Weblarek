@@ -1,149 +1,155 @@
-// src/components/appData.ts 
+// src/components/appData.ts
 
-import { Model } from './base/BaseModel'; 
-import { 
-    IApiStatus, 
-    IProduct, 
-    ErrorForm, 
-    IOrder, 
-    IContact, 
-    IDelivery, 
-} from '../types/index'; 
+import { Model } from './base/BaseModel';
+import {
+	IApiStatus,
+	IProduct,
+	ErrorForm,
+	IOrder,
+	IContact,
+	IDelivery,
+} from '../types/index';
 
-export interface CatalogChangeEvent { 
-    products: IProduct[]; 
-} 
+export interface CatalogChangeEvent {
+	products: IProduct[];
+}
 
-export class AppState extends Model<IApiStatus> { 
-    catalog: IProduct[] = []; 
-    basket: IProduct[] = []; 
-    order: Partial<IOrder> = { 
-        email: '', 
-        phone: '', 
-        address: '', 
-        payment: '' 
-    }; 
+export class AppState extends Model<IApiStatus> {
+	catalog: IProduct[] = [];
+	basket: IProduct[] = [];
+	order: Partial<IOrder> = {
+		email: '',
+		phone: '',
+		address: '',
+		payment: '',
+	};
 
-    preview: string | null; 
-    formErrors: ErrorForm = {}; 
+	preview: string | null;
+	formErrors: ErrorForm = {};
 
-    addToBasket(product: IProduct) { 
-        if (!this.basket.find((p) => p.id === product.id)) { 
-            this.basket.push(product); 
-             
-            if (!this.order.items) { 
-                this.order.items = []; 
-            }     
-            this.order.items.push(product.id); 
-            this.updateBasket(); 
-        } 
-    } 
+	addToBasket(product: IProduct) {
+		if (!this.basket.find((p) => p.id === product.id)) {
+			this.basket.push(product);
 
-    removeFromBasket(product: IProduct) { 
-        this.basket = this.basket.filter((p) => p.id !== product.id); 
-        this.order.items = this.order.items.filter((id) => id !== product.id); 
-        this.updateBasket(); 
-    } 
+			if (!this.order.items) {
+				this.order.items = [];
+			}
+			this.order.items.push(product.id);
+			this.updateBasket();
+		}
+	}
 
-    clearBasket() { 
-        this.basket = []; 
-        this.order.items = []; 
-        this.updateBasket(); 
-    } 
+	removeFromBasket(product: IProduct) {
+		this.basket = this.basket.filter((p) => p.id !== product.id);
+		this.order.items = this.order.items.filter((id) => id !== product.id);
+		this.updateBasket();
+	}
 
-    updateBasket() { 
-        this.order.total = this.getTotal(); 
-        this.emitChanges('basket:change', this.basket); 
-        this.emitChanges('basket:update'); 
-    } 
+	clearBasket() {
+		this.basket = [];
+		this.order.items = [];
+		this.updateBasket();
+	}
 
-    getTotal() { 
-        return this.basket.reduce((sum, item) => sum + item.price, 0); 
-    } 
+	updateBasket() {
+		this.order.total = this.getTotal();
+		this.emitChanges('basket:change', this.basket);
+		this.emitChanges('basket:update');
+	}
 
-    setCatalog(items: IProduct[]) { 
-        this.catalog = items; 
-        this.emitChanges('catalog:change', { products: this.catalog }); 
-    } 
+	getTotal() {
+		return this.basket.reduce((sum, item) => sum + item.price, 0);
+	}
 
-    setPreview(product: IProduct) { 
-        this.preview = product.id; 
-        this.emitChanges('preview:changed', product); 
-    } 
+	setCatalog(items: IProduct[]) {
+		this.catalog = items;
+		this.emitChanges('catalog:change', { products: this.catalog });
+	}
 
-    getOrderToPost(): IOrder { 
-        return { 
-            ...this.order as IOrder, 
-            items: this.basket.map((item) => item.id), 
-            total: this.getTotal() 
-        }; 
-    } 
+	setPreview(product: IProduct) {
+		this.preview = product.id;
+		this.emitChanges('preview:changed', product);
+	}
 
-    setPayment(value:string) { 
-        this.order.payment = value; 
-        this.emitChanges("order:change", this.order); 
-    } 
+	getOrderToPost(): IOrder {
+		return {
+			...(this.order as IOrder),
+			items: this.basket.map((item) => item.id),
+			total: this.getTotal(),
+		};
+	}
 
-    setOrderField<Field extends keyof IOrder>(field: Field, value: IOrder[Field]) { 
-        this.order[field] = value; 
+	setPayment(value: string) {
+		this.order.payment = value;
+		this.emitChanges('order:change', this.order);
+	}
 
-        if (this.validOrder()) { 
-            this.emitChanges('order:valid'); 
-        } 
-    } 
+	setOrderField<Field extends keyof IOrder>(
+		field: Field,
+		value: IOrder[Field]
+	) {
+		this.order[field] = value;
 
-    setContactField<Field extends keyof IContact>(field: Field, value: IContact[Field]) { 
-        this.order[field] = value; 
+		if (this.validOrder()) {
+			this.emitChanges('order:valid');
+		}
+	}
 
-        if (this.validContact()) { 
-            this.emitChanges('contacts:valid'); 
-        } 
-    } 
+	setContactField<Field extends keyof IContact>(
+		field: Field,
+		value: IContact[Field]
+	) {
+		this.order[field] = value;
 
-    validContact() { 
-        const errors: typeof this.formErrors = {}; 
+		if (this.validContact()) {
+			this.emitChanges('contacts:valid');
+		}
+	}
 
-        if ( 
-            !this.order.email || 
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.order.email) 
-        ) { 
-            errors.email = 'Введите корректный email'; 
-        } 
+	validContact() {
+		const errors: typeof this.formErrors = {};
 
-        if (!this.order.phone || !/^\+?\d{10,15}$/.test(this.order.phone)) { 
-            errors.phone = 'Введите корректный номер телефона'; 
-        } 
+		if (
+			!this.order.email ||
+			!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.order.email)
+		) {
+			errors.email = 'Введите корректный email';
+		}
 
-        this.formErrors = errors; 
-        this.emitChanges('formErrors:change', this.formErrors); 
+		if (!this.order.phone || !/^\+?\d{10,15}$/.test(this.order.phone)) {
+			errors.phone = 'Введите корректный номер телефона';
+		}
 
-        return Object.keys(errors).length === 0; 
-    } 
+		this.formErrors = errors;
+		this.emitChanges('formErrors:change', this.formErrors);
 
-    validOrder() { 
-        const errors: typeof this.formErrors = {}; 
+		return Object.keys(errors).length === 0;
+	}
 
-        if (!this.order.address) { 
-            errors.address = 'Введите адрес'; 
-        } 
+	validOrder() {
+		const errors: typeof this.formErrors = {};
 
-        if (!this.order.payment) { 
-            errors.payment = 'Выберите способ оплаты'; 
-        } 
+		if (!this.order.address) {
+			errors.address = 'Введите адрес';
+		}
 
-        this.formErrors = errors; 
-        this.emitChanges('formErrors:change', this.formErrors); 
+		if (!this.order.payment) {
+			errors.payment = 'Выберите способ оплаты';
+		}
 
-        return Object.keys(errors).length === 0; 
-    } 
+		this.formErrors = errors;
+		this.emitChanges('formErrors:change', this.formErrors);
 
-    resetOrder() { 
-        this.order.address = ''; 
-        this.order.payment = ''; 
-    } 
-     
-    resetContact() { 
-        this.order.email = ''; 
-        this.order.phone = ''; 
-    } 
+		return Object.keys(errors).length === 0;
+	}
+
+	resetOrder() {
+		this.order.address = '';
+		this.order.payment = '';
+	}
+
+	resetContact() {
+		this.order.email = '';
+		this.order.phone = '';
+	}
 }

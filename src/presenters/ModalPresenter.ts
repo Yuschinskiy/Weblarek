@@ -4,19 +4,19 @@ import { EventEmitter } from '../components/base/BaseEvents';
 import { ensureElement } from '../utils/utils';
 
 export class ModalPresenter {
-    private modal: Modal;
+	private modal: Modal;
 
-    constructor(private events: EventEmitter) {
-        const modalContainer = ensureElement<HTMLElement>('#modal-container');
-        this.modal = new Modal(modalContainer, this.events);
-    }
+	constructor(private events: EventEmitter) {
+		const modalContainer = ensureElement<HTMLElement>('#modal-container');
+		this.modal = new Modal(modalContainer, this.events);
+	}
 
-    openModal(content: HTMLElement): void {
-        this.modal.content = content;
-        this.modal.open();
-    }
+	openModal(content: HTMLElement): void {
+		this.modal.content = content;
+		this.modal.open();
+	}
 
-    closeModal(): void {
-        this.modal.close();
-    }
+	closeModal(): void {
+		this.modal.close();
+	}
 }

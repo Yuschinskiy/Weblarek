@@ -36,15 +36,33 @@ const contactsForm = new ContactsForm(cloneTemplate(contactsTemplate), events);
 
 // Презентеры
 const modalPresenter = new ModalPresenter(events);
-const productPresenter = new ProductPresenter(events, appData, page, modalPresenter);
-const basketPresenter = new BasketPresenter(events, appData, basket, modalPresenter);
-const orderPresenter = new OrderPresenter(events, appData, orderForm, contactsForm, modalPresenter, api);
+const productPresenter = new ProductPresenter(
+	events,
+	appData,
+	page,
+	modalPresenter
+);
+const basketPresenter = new BasketPresenter(
+	events,
+	appData,
+	basket,
+	modalPresenter
+);
+const orderPresenter = new OrderPresenter(
+	events,
+	appData,
+	orderForm,
+	contactsForm,
+	modalPresenter,
+	api
+);
 const pagePresenter = new PagePresenter(events, appData, page);
 
 // Отладка
 events.onAll(({ eventName, data }) => console.log(eventName, data));
 
 // Запуск
-api.getProductList()
-    .then((data) => appData.setCatalog(data))
-    .catch(console.error);
+api
+	.getProductList()
+	.then((data) => appData.setCatalog(data))
+	.catch(console.error);

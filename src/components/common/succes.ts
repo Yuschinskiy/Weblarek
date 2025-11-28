@@ -26,7 +26,7 @@ export class Progres extends Component<ISuccsess> {
 		if (actions?.onClick)
 			this._closeButton.addEventListener('click', actions.onClick);
 	}
-	
+
 	set total(value: string) {
 		this.setText(this._total, `Списано ${value} синапсов`);
 	}
