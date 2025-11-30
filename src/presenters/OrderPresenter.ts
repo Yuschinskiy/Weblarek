@@ -94,16 +94,20 @@ export class OrderPresenter {
 	}
 
 	private updateFormValidation(errors: Partial<IOrder>): void {
-		const { address, email, phone } = errors;
-		this.orderForm.valid = !address;
-		this.orderForm.errors = Object.values({ address })
-			.filter(Boolean)
-			.join('; ');
-		this.contactsForm.valid = !email && !phone;
-		this.contactsForm.errors = Object.values({ email, phone })
-			.filter(Boolean)
-			.join('; ');
-	}
+    const { address, payment, email, phone } = errors;
+    
+    // Валидация формы заказа
+    this.orderForm.valid = !address && !payment;
+    this.orderForm.errors = Object.values({ address, payment })
+        .filter(Boolean)
+        .join('; ');
+    
+    // Валидация формы контактов
+    this.contactsForm.valid = !email && !phone;
+    this.contactsForm.errors = Object.values({ email, phone })
+        .filter(Boolean)
+        .join('; ');
+}
 
 	private submitOrder(): void {
 		this.events.emit('contact:open'); // Переход к контактам
